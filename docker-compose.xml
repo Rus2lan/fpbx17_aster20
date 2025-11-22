@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  freepbx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: freepbx-asterisk-17
+    container_name: freepbx
+    
+    # "host" режим критически важен для SIP/RTP. 
+    # Контейнер использует сетевой стек хоста напрямую.
+    network_mode: host
+
+    volumes:
+      # Конфиги Asterisk
+      - ./data/etc:/etc/asterisk
+      # Базы данных, звуки, ключи, документация
+      - ./data/lib:/var/lib/asterisk
+      # Записи разговоров, факсы, голосовая почта
+      - ./data/spool:/var/spool/asterisk
+      # Логи
+      - ./data/log:/var/log/asterisk
+      # Веб-интерфейс FreePBX
+      - ./data/www:/var/www/html
+      # База данных MariaDB
+      - ./data/mysql:/var/lib/mysql
+
+    environment:
+      - TZ=Europe/Riga
+
+    # Даем права на управление приоритетами (важно для голоса)
+    cap_add:
+      - SYS_NICE
+      - NET_ADMIN
+      - SYS_PTRACE
+
+    restart: unless-stopped
